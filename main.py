@@ -1,5 +1,6 @@
 import sys
 import psutil
+from pathlib import Path
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel,
                                QVBoxLayout, QProgressBar)
@@ -33,12 +34,16 @@ window.setStyleSheet("""
     }
 """)
 
+# -- storage detection --
+storage_path = Path.home()
+storage_name = storage_path.anchor # readable name
+
 # -- widgets --
 cpu_label = QLabel("CPU Usage:")
 cpu_progress = QProgressBar()
 ram_label = QLabel("RAM Usage:")
 ram_progress = QProgressBar()
-disk_label = QLabel("Storage:")
+disk_label = QLabel(f"Storage: ({storage_name})")
 disk_progress = QProgressBar()
 
 # -- layouts --
@@ -84,7 +89,7 @@ def monitor():
                            f"/ {ram_total:.2f} GB")
 
     # -- disk --
-    disk_usage = psutil.disk_usage('/')
+    disk_usage = psutil.disk_usage(str(storage_path))
     disk_used = disk_usage.used/1024 ** 3
     disk_total = disk_usage.total / 1024 ** 3
     disk_progress.setValue(int(disk_usage.percent))
