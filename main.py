@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import psutil
+import cpuinfo
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
@@ -10,6 +11,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QProgressBar,
 )
+
+BYTES_PER_GB = 1024 ** 3
+
 
 # desktop window class
 # inherits from QWidget, meaning that this class is the app window
@@ -42,18 +46,21 @@ class SystemMonitorWindow(QWidget):
             }
         """)
 
+        # -- cpu detection --
+        cpu_name = cpuinfo.get_cpu_info()['brand_raw'] or "Unknown"
+
         # -- storage detection --
         self.storage_path = Path.home()
         storage_name = self.storage_path.anchor  # readable name
 
         # -- widgets --
-        cpu_label = QLabel("CPU Usage:")
+        cpu_label = QLabel(f"CPU ({cpu_name}) Usage:")
         self.cpu_progress = QProgressBar()
 
         ram_label = QLabel("RAM Usage:")
         self.ram_progress = QProgressBar()
 
-        disk_label = QLabel(f"Storage: ({storage_name})")
+        disk_label = QLabel(f"Storage ({storage_name}):")
         self.disk_progress = QProgressBar()
 
         # -- layouts --
@@ -84,12 +91,11 @@ class SystemMonitorWindow(QWidget):
         self.setLayout(main_layout)
 
         # -- timer --
-        self.timer = QTimer()
+        self.timer = QTimer(self)
         self.timer.timeout.connect(self.monitor)
         self.timer.start(1000)
 
         self.monitor()
-
 
     # function to monitor the user's system and update the metrics
     def monitor(self):
@@ -99,16 +105,16 @@ class SystemMonitorWindow(QWidget):
 
         # -- memory --
         ram_usage = psutil.virtual_memory()
-        ram_used = ram_usage.used / 1024 ** 3
-        ram_total = ram_usage.total / 1024 ** 3
+        ram_used = ram_usage.used / BYTES_PER_GB
+        ram_total = ram_usage.total / BYTES_PER_GB
         self.ram_progress.setValue(int(ram_usage.percent))
         self.ram_progress.setFormat(f"{ram_used:.2f} GB "
-                               f"/ {ram_total:.2f} GB")
+                                    f"/ {ram_total:.2f} GB")
 
         # -- disk --
         disk_usage = psutil.disk_usage(str(self.storage_path))
-        disk_used = disk_usage.used / 1024 ** 3
-        disk_total = disk_usage.total / 1024 ** 3
+        disk_used = disk_usage.used / BYTES_PER_GB
+        disk_total = disk_usage.total / BYTES_PER_GB
         self.disk_progress.setValue(int(disk_usage.percent))
         self.disk_progress.setFormat(f"{disk_used:.2f} GB / {disk_total:.2f} GB")
 
