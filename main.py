@@ -1,8 +1,8 @@
+import platform
 import sys
 from pathlib import Path
 
 import psutil
-import cpuinfo
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
@@ -47,7 +47,7 @@ class SystemMonitorWindow(QWidget):
         """)
 
         # -- cpu detection --
-        cpu_name = cpuinfo.get_cpu_info()['brand_raw'] or "Unknown"
+        cpu_name = platform.processor() or "Unknown"
 
         # -- storage detection --
         self.storage_path = Path.home()
